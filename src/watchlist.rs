@@ -2,7 +2,10 @@ use std::sync::mpsc::Sender;
 
 use cursive::align::HAlign;
 use cursive::event::{Event, EventResult, Key};
-use cursive::views::{Dialog, LinearLayout, OnEventView, ScrollView, SelectView, TextView};
+use cursive::view::Resizable;
+use cursive::views::{
+    Dialog, LinearLayout, OnEventView, ResizedView, ScrollView, SelectView, TextView,
+};
 use cursive::Cursive;
 
 use crate::app_ui::CtlSender;
@@ -69,7 +72,7 @@ fn pop_layer(siv: &mut Cursive, symbol: Option<&str>) {
 fn create_select_view(
     content: &str,
     selected_ticker: Option<&str>,
-) -> OnEventView<ScrollView<SelectView>> {
+) -> OnEventView<ScrollView<ResizedView<SelectView>>> {
     let mut select = SelectView::new().autojump().h_align(HAlign::Left);
 
     let mut lines = content.lines().collect::<Vec<_>>();
@@ -82,15 +85,18 @@ fn create_select_view(
         }
     }
 
-    let select = select.on_select(on_select).on_submit(cb_pop_layer);
+    let select = select
+        .on_select(on_select)
+        .on_submit(cb_pop_layer)
+        .max_size((10, 20));
 
     let select = OnEventView::new(ScrollView::new(select))
         .on_pre_event_inner(Event::Char('k'), |s, _| {
-            s.get_inner_mut().select_up(1);
+            s.get_inner_mut().get_inner_mut().select_up(1);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(Event::Char('j'), |s, _| {
-            s.get_inner_mut().select_down(1);
+            s.get_inner_mut().get_inner_mut().select_down(1);
             Some(EventResult::Consumed(None))
         });
 
