@@ -4,14 +4,9 @@ use std::{
 };
 
 use chrono::Local;
-use cursive::{
-    theme::{BaseColor, Color, PaletteColor},
-    views::TextView,
-    CursiveRunnable,
-};
+use cursive::{views::TextView, CursiveRunnable};
 
 use crate::{
-    app_menu::initialize_menus,
     commands::{CtlCommand, UICommand},
     status::{self, UI_STATUS_TIME},
     test_view,
@@ -24,8 +19,10 @@ pub struct UI {
     tx: Sender<CtlCommand>,
 }
 
+pub type CtlSender = Sender<CtlCommand>;
+
 impl UI {
-    pub fn new(tx: Sender<CtlCommand>, rx: Receiver<UICommand>) -> UI {
+    pub fn new(tx: CtlSender, rx: Receiver<UICommand>) -> UI {
         let mut siv = cursive::default();
         siv.set_window_title("Trade Helper");
         siv.set_user_data(tx.clone());
@@ -72,7 +69,7 @@ impl UI {
 
             runner.refresh();
             if !runner.step() {
-                sleep(std::time::Duration::from_millis(50));
+                //sleep(std::time::Duration::from_millis(50));
             }
         }
         drop(runner);

@@ -18,7 +18,7 @@ impl AppController {
         //messages come from UI, should not ever break - quit only through UI
         while let Ok(msg) = self.rx.recv() {
             match msg {
-                CtlCommand::Ready => {
+                CtlCommand::Ready | CtlCommand::WatchList => {
                     self.tx.send(UICommand::WatchList).unwrap();
                 }
                 CtlCommand::SelectTicker(ticker) => {

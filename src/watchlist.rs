@@ -1,12 +1,13 @@
 use std::sync::mpsc::Sender;
 
 use cursive::align::HAlign;
-use cursive::event::{Event, EventResult};
+use cursive::event::{Event, EventResult, Key};
 use cursive::views::{Dialog, LinearLayout, OnEventView, ScrollView, SelectView, TextView};
 use cursive::Cursive;
 
+use crate::app_ui::CtlSender;
 use crate::commands::CtlCommand;
-use crate::status::UI_STATUS_SYMBOL;
+use crate::status::{set_global_help, UI_F2, UI_F3, UI_STATUS_SYMBOL};
 
 pub fn watchlist(siv: &mut Cursive) {
     let content = include_str!("../watchlist.txt");
@@ -19,7 +20,50 @@ pub fn watchlist(siv: &mut Cursive) {
 
     let layout = LinearLayout::vertical().child(select);
 
-    siv.add_layer(Dialog::around(layout).title("Select Symbol"));
+    add_layer(siv, Dialog::around(layout).title("Select Symbol"));
+}
+
+fn add_layer(siv: &mut Cursive, view: Dialog) {
+    let view = OnEventView::new(view)
+        .on_event(Key::Esc, |siv| {
+            pop_layer(siv, None);
+        })
+        .on_event(Key::F2, |_siv| {
+            //add
+            //pop_layer(siv, None);
+        })
+        .on_event(Key::F3, |_siv| {
+            //delete
+            //pop_layer(siv, None);
+        });
+
+    siv.call_on_name(UI_F2, |tv: &mut TextView| {
+        tv.set_content("Add");
+    });
+    siv.call_on_name(UI_F3, |tv: &mut TextView| {
+        tv.set_content("Del");
+    });
+
+    siv.add_layer(view);
+}
+
+fn cb_pop_layer(siv: &mut Cursive, symbol: &str) {
+    pop_layer(siv, Some(symbol)) // Some(symbol);
+}
+
+fn pop_layer(siv: &mut Cursive, symbol: Option<&str>) {
+    siv.pop_layer();
+
+    set_global_help(siv);
+
+    let Some(symbol) = symbol else { return };
+
+    siv.user_data().map(|tx: &mut Option<CtlSender>| {
+        if let Some(tx) = tx {
+            tx.send(CtlCommand::SelectTicker(symbol.to_owned()))
+                .unwrap()
+        }
+    });
 }
 
 fn create_select_view(
@@ -35,9 +79,7 @@ fn create_select_view(
         }
     }
 
-    let select = select
-        .on_select(on_select)
-        .on_submit(show_confirmation_dialog);
+    let select = select.on_select(on_select).on_submit(cb_pop_layer);
 
     let select = OnEventView::new(ScrollView::new(select))
         .on_pre_event_inner(Event::Char('k'), |s, _| {
@@ -63,20 +105,4 @@ fn on_select(siv: &mut Cursive, ticker: &String) {
             .send(CtlCommand::SelectTicker(ticker.to_string()))
             .unwrap();
     }
-}
-
-fn show_confirmation_dialog(siv: &mut Cursive, ticker: &str) {
-    let ticker = ticker.to_string();
-    siv.pop_layer();
-    let text = format!("{} is a great symbol!", ticker);
-    siv.add_layer(
-        Dialog::around(TextView::new(text))
-            .button("OK", move |s| {
-                s.pop_layer();
-                let content = include_str!("../watchlist.txt");
-                let select = create_select_view(content, Some(&ticker));
-                s.add_layer(Dialog::around(select).title("Select symbol"));
-            })
-            .button("Quit", |s| s.quit()),
-    );
 }

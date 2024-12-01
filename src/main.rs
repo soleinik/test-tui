@@ -2,10 +2,10 @@ mod app_controller;
 mod app_menu;
 mod app_ui;
 mod commands;
+mod help;
 mod status;
 mod test_view;
 mod watchlist;
-
 use std::sync::mpsc::channel;
 
 use app_controller::AppController;

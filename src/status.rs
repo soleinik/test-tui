@@ -1,9 +1,12 @@
 use cursive::{
+    event::Key,
     theme::{BaseColor, Color},
     view::{Nameable, Resizable},
     views::{FixedLayout, Layer, LinearLayout, OnLayoutView, TextContent, TextView},
-    Rect, View, With,
+    Cursive, Rect, View, With,
 };
+
+use crate::{app_ui::CtlSender, commands::CtlCommand, help, watchlist};
 
 pub const UI_STATUS_SYMBOL: &str = "status-symbol";
 
@@ -23,6 +26,55 @@ pub const UI_STATUS_TIME: &str = "status-time";
 const F_KEYS: [&str; 10] = [
     UI_F1, UI_F2, UI_F3, UI_F4, UI_F5, UI_F6, UI_F7, UI_F8, UI_F9, UI_F10,
 ];
+
+pub fn set_global_help(siv: &mut Cursive) {
+    // siv.call_on_name(UI_F1, |tv: &mut TextView| {
+    //     tv.set_content("Help");
+    // });
+    // siv.set_global_callback(Key::F1, |s| {
+    //     help::help(s);
+    // });
+
+    siv.call_on_name(UI_F2, |tv: &mut TextView| {
+        tv.set_content("Watchlist");
+    });
+    siv.set_global_callback(Key::F2, |s| {
+        watchlist::watchlist(s);
+        // if let Some(x) = s.user_data::<CtlSender>() {
+        //     x.send(CtlCommand::WatchList).unwrap();
+        // }
+    });
+
+    siv.call_on_name(UI_F3, |tv: &mut TextView| {
+        tv.set_content("");
+    });
+
+    siv.call_on_name(UI_F4, |tv: &mut TextView| {
+        tv.set_content("");
+    });
+
+    siv.call_on_name(UI_F5, |tv: &mut TextView| {
+        tv.set_content("");
+    });
+    siv.call_on_name(UI_F6, |tv: &mut TextView| {
+        tv.set_content("");
+    });
+    siv.call_on_name(UI_F7, |tv: &mut TextView| {
+        tv.set_content("");
+    });
+    siv.call_on_name(UI_F8, |tv: &mut TextView| {
+        tv.set_content("");
+    });
+    siv.call_on_name(UI_F9, |tv: &mut TextView| {
+        tv.set_content("");
+    });
+    // siv.call_on_name(UI_F10, |tv: &mut TextView| {
+    //     tv.set_content("Quit");
+    // });
+    // siv.set_global_callback(Key::F10, |s| {
+    //     s.quit();
+    // });
+}
 
 pub fn create(siv: &mut cursive::Cursive) {
     let mut style = cursive::theme::Style::none();
@@ -78,22 +130,9 @@ pub fn create(siv: &mut cursive::Cursive) {
 
     let button_layer = Layer::with_color(button_layout, style.color).full_width();
 
-    // let symbol_div = TextContent::new("|");
-    // let time_div = TextContent::new("|");
-    // let help_content = TextContent::new("Help: Press ESC to exit");
-
-    // let symbol_div_view = TextView::new_with_content(symbol_div).fixed_width(1);
-
-    // let help_view = TextView::new_with_content(help_content.clone()).with_name(UI_STATUS_HELP);
-
-    // let time_div_view = TextView::new_with_content(time_div).fixed_width(1);
-
     let status_line = LinearLayout::horizontal()
         .child(symbol_view)
         .child(button_layer)
-        // .child(symbol_div_view)
-        // .child(help_view.full_width())
-        // .child(time_div_view)
         .child(time_view)
         .full_width();
 
@@ -110,4 +149,18 @@ pub fn create(siv: &mut cursive::Cursive) {
     .full_screen();
 
     siv.screen_mut().add_transparent_layer(on_layout_view);
+
+    siv.call_on_name(UI_F10, |tv: &mut TextView| {
+        tv.set_content("Quit");
+    });
+    siv.set_global_callback(Key::F10, |s| {
+        s.quit();
+    });
+
+    siv.call_on_name(UI_F1, |tv: &mut TextView| {
+        tv.set_content("Help");
+    });
+    siv.set_global_callback(Key::F1, |s| {
+        help::help(s);
+    });
 }

@@ -7,6 +7,7 @@ pub enum UICommand {
 
 pub enum CtlCommand {
     Ready,
+    WatchList,
     SelectTicker(String),
 
     ///For Testing/Debuging
