@@ -7,6 +7,7 @@ use chrono::Local;
 use cursive::{views::TextView, CursiveRunnable};
 
 use crate::{
+    app_menu::initialize_menus,
     commands::{CtlCommand, UICommand},
     status::{self, UI_STATUS_TIME},
     test_view,
@@ -38,7 +39,7 @@ impl UI {
     pub fn run(&mut self) {
         let mut runner = self.siv.runner();
         //runner.set_fps(1);
-        // initialize_menus(&mut runner);
+        initialize_menus(&mut runner);
         // runner.refresh();
 
         //UI is ready, notify controller

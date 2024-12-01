@@ -93,7 +93,7 @@ pub fn create(siv: &mut cursive::Cursive) {
         .map(|label| {
             TextView::new("")
                 .style(style)
-                .h_align(cursive::align::HAlign::Left)
+                .h_align(cursive::align::HAlign::Center)
                 .with_name(label)
                 .min_width(8)
                 .full_width()

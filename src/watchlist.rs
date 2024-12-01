@@ -71,7 +71,10 @@ fn create_select_view(
     selected_ticker: Option<&str>,
 ) -> OnEventView<ScrollView<SelectView>> {
     let mut select = SelectView::new().autojump().h_align(HAlign::Left);
-    select.add_all_str(content.lines());
+
+    let mut lines = content.lines().collect::<Vec<_>>();
+    lines.sort();
+    select.add_all_str(lines);
 
     if let Some(ticker) = selected_ticker {
         if let Some(index) = content.lines().position(|line| line == ticker) {
