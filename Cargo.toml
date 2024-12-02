@@ -5,7 +5,9 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4"
+log = "0.4.22"
 #tokio = { version = "1.0", features = ["full"] }
+
 
 [dependencies.cursive]
 version = "0.21"
