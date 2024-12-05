@@ -1,67 +1,107 @@
 use std::{
-    sync::mpsc::{Receiver, Sender},
+    sync::mpsc::{channel, Receiver, Sender},
     thread::sleep,
 };
 
 use chrono::Local;
-use cursive::{views::TextView, CursiveRunnable};
+use cursive::{event::Key, views::TextView, CursiveRunnable};
 
 use crate::{
+    app_layout,
     app_menu::initialize_menus,
-    commands::{CtlCommand, UICommand},
+    commands::CtlCommand,
     status::{self, UI_STATUS_TIME},
-    test_view,
-    watchlist::watchlist,
+    table, watchlist,
 };
+
+pub struct AppState {
+    ticker: Option<String>,
+    trade_date: Option<String>,
+    tx: CtlSender,
+}
+
+impl AppState {
+    pub fn ticker(&self) -> Option<String> {
+        self.ticker.clone()
+    }
+    pub fn trade_date(&self) -> Option<String> {
+        self.trade_date.clone()
+    }
+
+    pub fn send(&mut self, cmd: CtlCommand) {
+        self.tx.send(cmd).unwrap();
+    }
+}
 
 pub struct UI {
     siv: CursiveRunnable,
-    rx: Receiver<UICommand>,
-    tx: Sender<CtlCommand>,
+    rx: Receiver<CtlCommand>,
 }
 
 pub type CtlSender = Sender<CtlCommand>;
 
 impl UI {
-    pub fn new(tx: CtlSender, rx: Receiver<UICommand>) -> UI {
+    pub fn new() -> UI {
+        let (tx, rx) = channel::<CtlCommand>();
+
+        cursive::logger::set_internal_filter_level(log::LevelFilter::Info);
+        cursive::logger::init();
+
         let mut siv = cursive::default();
+        siv.add_global_callback(Key::F9, cursive::Cursive::toggle_debug_console);
+
         siv.set_window_title("Trade Helper");
-        siv.set_user_data(tx.clone());
+
+        let state = AppState {
+            ticker: None,
+            trade_date: None,
+            tx,
+        };
+
+        siv.set_user_data(state);
 
         // // Apply a custom theme with a background color
         // let mut theme = siv.current_theme().clone();
         // theme.palette[PaletteColor::Background] = Color::Light(BaseColor::Blue); // Set background color to blue siv.set_theme
         // siv.set_theme(theme);
 
-        UI { siv, rx, tx }
+        let ui = UI { siv, rx };
+
+        ui
     }
 
     pub fn run(&mut self) {
         let mut runner = self.siv.runner();
-        //runner.set_fps(1);
         initialize_menus(&mut runner);
-        // runner.refresh();
 
-        //UI is ready, notify controller
-        self.tx.send(CtlCommand::Ready).unwrap();
-        //self.tx.send(CtlCommand::Ping(UICommand::TestView)).unwrap();
-
+        app_layout::app_layout(&mut runner);
         status::create(&mut runner);
+
+        table::create_table(&mut runner, &grid_component::test_table());
+
+        watchlist::watchlist_load(&mut runner);
 
         // Run the Cursive event loop
         while runner.is_running() {
-            //check for controller's messages, non blocking read
-            while let Some(msg) = self.rx.try_iter().next() {
-                match msg {
-                    UICommand::WatchList => {
-                        watchlist(&mut runner);
+            while let Some(cmd) = self.rx.try_iter().next() {
+                log::info!("cmd: {cmd:?}");
+                match cmd {
+                    CtlCommand::SelectTicker(ticker) => {
+                        log::info!("SelectTicker {}", ticker);
+                        //do any broadcasting... if any
+                        watchlist::tradedate_load(&mut runner, &ticker);
+                        runner.user_data().map(|state: &mut AppState| {
+                            state.ticker = Some(ticker);
+                        });
                     }
-                    UICommand::TestView => {
-                        test_view::test_view(&mut runner);
+                    CtlCommand::Quit => todo!(),
+                    CtlCommand::SelectTradeDate(trade_date) => {
+                        log::info!("SelectTradeDate {}", trade_date);
+                        runner.user_data().map(|state: &mut AppState| {
+                            state.trade_date = Some(trade_date);
+                        });
                     }
-                    UICommand::Quit => todo!(),
                 }
-                sleep(std::time::Duration::from_millis(1000));
             }
 
             runner.call_on_name(UI_STATUS_TIME, |tv: &mut TextView| {

@@ -6,7 +6,7 @@ use cursive::{
     Cursive, Rect, View, With,
 };
 
-use crate::{app_ui::CtlSender, commands::CtlCommand, help, watchlist};
+use crate::{app_layout, app_ui::CtlSender, commands::CtlCommand, help, watchlist};
 
 pub const UI_STATUS_SYMBOL: &str = "status-symbol";
 
@@ -35,15 +35,12 @@ pub fn set_global_help(siv: &mut Cursive) {
     //     help::help(s);
     // });
 
-    siv.call_on_name(UI_F2, |tv: &mut TextView| {
-        tv.set_content("Watchlist");
-    });
-    siv.set_global_callback(Key::F2, |s| {
-        watchlist::watchlist(s);
-        // if let Some(x) = s.user_data::<CtlSender>() {
-        //     x.send(CtlCommand::WatchList).unwrap();
-        // }
-    });
+    // siv.call_on_name(UI_F2, |tv: &mut TextView| {
+    //     tv.set_content("Watchlist");
+    // });
+    // siv.set_global_callback(Key::F2, |s| {
+    //     watchlist::watchlist(s);
+    // });
 
     siv.call_on_name(UI_F3, |tv: &mut TextView| {
         tv.set_content("");
@@ -65,9 +62,9 @@ pub fn set_global_help(siv: &mut Cursive) {
     siv.call_on_name(UI_F8, |tv: &mut TextView| {
         tv.set_content("");
     });
-    siv.call_on_name(UI_F9, |tv: &mut TextView| {
-        tv.set_content("");
-    });
+    // siv.call_on_name(UI_F9, |tv: &mut TextView| {
+    //     tv.set_content("Log");
+    // });
     // siv.call_on_name(UI_F10, |tv: &mut TextView| {
     //     tv.set_content("Quit");
     // });
@@ -146,9 +143,16 @@ pub fn create(siv: &mut cursive::Cursive) {
         layout.set_child_position(0, Rect::from_size((0, size.y - 1), (size.x, 1)));
         layout.layout(size);
     })
-    .full_screen();
+    .full_width();
 
-    siv.screen_mut().add_transparent_layer(on_layout_view);
+    if let Some(mut layout) = siv.find_name::<LinearLayout>(app_layout::ID_NAME_MAIN) {
+        layout.remove_child(app_layout::ID_INDEX_STATUS);
+        layout.insert_child(app_layout::ID_INDEX_STATUS, on_layout_view);
+    } else {
+        log::info!("{} not found", app_layout::ID_NAME_MAIN);
+    }
+
+    //siv.screen_mut().add_transparent_layer(on_layout_view);
 
     siv.call_on_name(UI_F10, |tv: &mut TextView| {
         tv.set_content("Quit");
@@ -162,5 +166,9 @@ pub fn create(siv: &mut cursive::Cursive) {
     });
     siv.set_global_callback(Key::F1, |s| {
         help::help(s);
+    });
+
+    siv.call_on_name(UI_F9, |tv: &mut TextView| {
+        tv.set_content("Log On/Off");
     });
 }

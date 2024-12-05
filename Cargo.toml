@@ -1,12 +1,19 @@
+[workspace]
+members = ["routines"]
+
+
 [package]
 name = "test-tui"
 version = "0.1.0"
 edition = "2021"
+default-run = "test-tui"
+
 
 [dependencies]
 chrono = "0.4"
 log = "0.4.22"
-#tokio = { version = "1.0", features = ["full"] }
+routines = { path = "./routines" }
+grid-component = { path = "../grid-component" }
 
 
 [dependencies.cursive]
