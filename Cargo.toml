@@ -13,7 +13,7 @@ default-run = "test-tui"
 chrono = "0.4"
 log = "0.4.22"
 routines = { path = "./routines" }
-grid-component = { path = "../grid-component" }
+grid-component = { git = "https://github.com/soleinik/grid-component", branch="main"}
 
 
 [dependencies.cursive]
